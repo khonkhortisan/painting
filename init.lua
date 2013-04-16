@@ -276,7 +276,7 @@ easel = {
     local name = wielded[1]
     local res = tonumber(wielded[2])
 
-    if name ~= "painting:canvas" then
+    if name ~= "painting:canvas" and name ~= "painting:paintedcanvas" then
       return
     end
     local meta = minetest.env:get_meta(pos)
@@ -292,10 +292,25 @@ easel = {
     pos = { x = pos.x - 0.01 * dir.x, y = pos.y, z = pos.z - 0.01 * dir.z }
 
     local p = minetest.env:add_entity(pos, "painting:paintent"):get_luaentity()
-    p.object:set_properties({ collisionbox = paintbox[fd%2] })
+    if name == "painting:paintedcanvas" then
+        --save metadata
+        local itemstack = player:get_wielded_item()
+        local data = itemstack:get_metadata()
+        local meta = minetest.env:get_meta(pos)
+        meta:set_string("painting:picturedata", data)
+        data = minetest.deserialize(data)
+        p.grid = data.grid
+        p.res = data.res
+        p.object:set_properties({
+            textures = { to_imagestring(data.grid, data.res) },
+            collisionbox = paintbox[fd%2]
+        })
+    else
+        p.object:set_properties({ collisionbox = paintbox[fd%2] })
+        p.grid = initgrid(res)
+        p.res = res
+    end
     p.object:setyaw(math.pi * fd / -2)
-    p.grid = initgrid(res)
-    p.res = res
     p.fd = fd
 
     meta:set_int("has_canvas", 1)
