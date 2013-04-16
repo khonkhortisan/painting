@@ -314,19 +314,12 @@ easel = {
     p.object:setyaw(math.pi * fd / -2)
     p.fd = fd
 
-    meta:set_int("has_canvas", 1)
     local itemstack = ItemStack(wielded_raw)
     player:get_inventory():remove_item("main", itemstack)
   end,
 
   can_dig = function(pos,player)
-    local meta = minetest.env:get_meta(pos)
-    local inv = meta:get_inventory()
-
-    if meta:get_int("has_canvas") == 0 then
-      return true
-    end
-    return false
+    return minetest.env:get_node({x=pos.x, y=pos.y+1, z=pos.z}).name ~= "painting:canvasnode"
   end
 }
 
