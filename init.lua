@@ -53,9 +53,10 @@ picnode =  {
   after_dig_node=function(pos, oldnode, oldmetadata, digger)
     --find and remove the entity
     local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
-    for _, e in ipairs(objects) do
-      if e:get_luaentity().name == "painting:picent" then
-        e:remove()
+    for _, o in ipairs(objects) do
+      local e = o:get_luaentity()
+      if e and e.name == "painting:picent" then
+        o:remove()
       end
     end
 
@@ -226,13 +227,13 @@ canvasnode = {
     --get data and remove pixels
     local data = {}
     local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
-    for _, e in ipairs(objects) do
-      e = e:get_luaentity()
-      if e.grid then
+    for _, o in ipairs(objects) do
+      local e = o:get_luaentity()
+      if e and e.grid then
         data.grid = e.grid
         data.res = e.res
+	o:remove()
       end
-      e.object:remove()
     end
 
     if data.grid then
