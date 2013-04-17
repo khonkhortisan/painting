@@ -293,8 +293,10 @@ easel = {
 
     local dir = dirs[fd]
     pos = { x = pos.x - 0.01 * dir.x, y = pos.y, z = pos.z - 0.01 * dir.z }
+    print(dump(pos))
 
     local p = minetest.env:add_entity(pos, "painting:paintent"):get_luaentity()
+    print(dump(p.object:getpos()))
     if name == "painting:paintedcanvas" then
         --save metadata
         local itemstack = player:get_wielded_item()
