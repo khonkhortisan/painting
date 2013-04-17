@@ -423,7 +423,7 @@ function dot(v, w)
 end
 
 function intersect(pos, dir, origin, normal)
-  local t = -(dot(sub(pos, origin), normal)) / dot(dir, normal)
+  local t = dot(sub(origin, pos), normal) / dot(dir, normal)
   return { x = pos.x + dir.x * t,
            y = pos.y + dir.y * t,
            z = pos.z + dir.z * t }
