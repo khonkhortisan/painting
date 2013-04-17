@@ -76,7 +76,7 @@ picent = {
   textures = { "white.png" },
 
   on_activate = function(self, staticdata)
-      local pos = self.object:getpos()
+      local pos = losejunkprecision(self.object:getpos())
       local meta = minetest.env:get_meta(pos)
       local data = meta:get_string("painting:picturedata")
       data = minetest.deserialize(data)
@@ -103,7 +103,7 @@ paintent = {
     local ppos = puncher:getpos()
     ppos = { x = ppos.x, y = ppos.y+(EYE_HEIGHT), z = ppos.z }
 
-    local pos = self.object:getpos()
+    local pos = losejunkprecision(self.object:getpos())
     local l = puncher:get_look_dir()
 
     local d = dirs[self.fd]
@@ -293,10 +293,12 @@ easel = {
 
     local dir = dirs[fd]
     pos = { x = pos.x - 0.01 * dir.x, y = pos.y, z = pos.z - 0.01 * dir.z }
-    print(dump(pos))
 
     local p = minetest.env:add_entity(pos, "painting:paintent"):get_luaentity()
-    print(dump(p.object:getpos()))
+    local newpos = p.object:getpos()
+    if pos.x ~= newpos.x or pos.y ~= newpos.y or pos.z ~= newpos.z then
+        print(dump(pos)..' ~= '..dump(newpos))
+    end
     if name == "painting:paintedcanvas" then
         --save metadata
         local itemstack = player:get_wielded_item()
@@ -443,4 +445,8 @@ function clamp(num, res)
   else
     return num
   end
+end
+
+function losejunkprecision(pos)
+	return {x=math.ceil(pos.x*100)/100,y=math.ceil(pos.y*100)/100,z=math.ceil(pos.z*100)/100}
 end
