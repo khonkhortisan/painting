@@ -11,6 +11,8 @@
 -- this texture is created by minetest-c55's internal image
 -- compositing engine (see tile.cpp).
 
+EYE_HEIGHT = 1.625
+
 dofile(minetest.get_modpath("painting").."/crafts.lua")
 
 textures = {
@@ -99,7 +101,7 @@ paintent = {
 
     --get player eye level
     local ppos = puncher:getpos()
-    ppos = { x = ppos.x, y = ppos.y+(1.5 + 1/16), z = ppos.z }
+    ppos = { x = ppos.x, y = ppos.y+(EYE_HEIGHT), z = ppos.z }
 
     local pos = self.object:getpos()
     local l = puncher:get_look_dir()
