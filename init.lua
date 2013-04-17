@@ -11,6 +11,8 @@
 -- this texture is created by minetest-c55's internal image
 -- compositing engine (see tile.cpp).
 
+EYE_HEIGHT = 1.625
+
 dofile(minetest.get_modpath("painting").."/crafts.lua")
 
 textures = {
@@ -53,9 +55,10 @@ picnode =  {
   after_dig_node=function(pos, oldnode, oldmetadata, digger)
     --find and remove the entity
     local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
-    for _, e in ipairs(objects) do
-      if e:get_luaentity().name == "painting:picent" then
-        e:remove()
+    for _, o in ipairs(objects) do
+      local e = o:get_luaentity()
+      if e and e.name == "painting:picent" then
+        o:remove()
       end
     end
 
@@ -98,7 +101,7 @@ paintent = {
 
     --get player eye level
     local ppos = puncher:getpos()
-    ppos = { x = ppos.x, y = ppos.y+(1.5 + 1/16), z = ppos.z }
+    ppos = { x = ppos.x, y = ppos.y+(EYE_HEIGHT), z = ppos.z }
 
     local pos = self.object:getpos()
     local l = puncher:get_look_dir()
@@ -226,13 +229,13 @@ canvasnode = {
     --get data and remove pixels
     local data = {}
     local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
-    for _, e in ipairs(objects) do
-      e = e:get_luaentity()
-      if e.grid then
+    for _, o in ipairs(objects) do
+      local e = o:get_luaentity()
+      if e and e.grid then
         data.grid = e.grid
         data.res = e.res
+	o:remove()
       end
-      e.object:remove()
     end
 
     if data.grid then
@@ -276,7 +279,7 @@ easel = {
     local name = wielded[1]
     local res = tonumber(wielded[2])
 
-    if name ~= "painting:canvas" then
+    if name ~= "painting:canvas" and name ~= "painting:paintedcanvas" then
       return
     end
     local meta = minetest.env:get_meta(pos)
@@ -292,25 +295,33 @@ easel = {
     pos = { x = pos.x - 0.01 * dir.x, y = pos.y, z = pos.z - 0.01 * dir.z }
 
     local p = minetest.env:add_entity(pos, "painting:paintent"):get_luaentity()
-    p.object:set_properties({ collisionbox = paintbox[fd%2] })
+    if name == "painting:paintedcanvas" then
+        --save metadata
+        local itemstack = player:get_wielded_item()
+        local data = itemstack:get_metadata()
+        local meta = minetest.env:get_meta(pos)
+        meta:set_string("painting:picturedata", data)
+        data = minetest.deserialize(data)
+        p.grid = data.grid
+        p.res = data.res
+        p.object:set_properties({
+            textures = { to_imagestring(data.grid, data.res) },
+            collisionbox = paintbox[fd%2]
+        })
+    else
+        p.object:set_properties({ collisionbox = paintbox[fd%2] })
+        p.grid = initgrid(res)
+        p.res = res
+    end
     p.object:setyaw(math.pi * fd / -2)
-    p.grid = initgrid(res)
-    p.res = res
     p.fd = fd
 
-    meta:set_int("has_canvas", 1)
     local itemstack = ItemStack(wielded_raw)
     player:get_inventory():remove_item("main", itemstack)
   end,
 
   can_dig = function(pos,player)
-    local meta = minetest.env:get_meta(pos)
-    local inv = meta:get_inventory()
-
-    if meta:get_int("has_canvas") == 0 then
-      return true
-    end
-    return false
+    return minetest.env:get_node({x=pos.x, y=pos.y+1, z=pos.z}).name ~= "painting:canvasnode"
   end
 }
 
